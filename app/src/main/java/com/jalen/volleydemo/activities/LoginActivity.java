@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,17 +26,21 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.avos.avoscloud.AVException;
+import com.avos.avoscloud.AVUser;
+import com.avos.avoscloud.LogInCallback;
 import com.jalen.volleydemo.R;
 
 /**
  * A login screen that offers login via email/password.
  */
 public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
-
+    private static final String tag = "LoginActivity";
     /**
      * A dummy authentication store containing known user names and passwords.
      * TODO: remove after connecting to a real authentication system.
@@ -67,7 +72,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == R.id.login || id == EditorInfo.IME_NULL) {
+                if (id == R.id.login || id == EditorInfo.IME_ACTION_GO) {
                     attemptLogin();
                     return true;
                 }
@@ -152,7 +157,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() >= 4;
     }
 
     /**
@@ -270,13 +275,26 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
                 return false;
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
+            // 退出当前用户的session
+            AVUser.logOut();
+            AVUser.logInInBackground(
+                    mEmail,
+                    mPassword,
+                    new LogInCallback<AVUser>() {
+                        /**
+                         * 这个done方法将会在UI线程中运行
+                         * @param avUser
+                         * @param e
+                         */
+                        @Override
+                        public void done(AVUser avUser, AVException e) {
+                            showMessage(
+                                    "用户 " + avUser.getUsername() + " 登录成功了",
+                                    e,
+                                    true);
+                        }
+                    }
+            );
 
             // TODO: register the new account here.
             return true;
@@ -299,6 +317,17 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor> {
         protected void onCancelled() {
             mAuthTask = null;
             showProgress(false);
+        }
+    }
+
+    private void showMessage(String msg, AVException e, boolean b) {
+        Log.i(tag, msg);
+        if(b){
+            Toast.makeText(
+                    this,
+                    msg,
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 }

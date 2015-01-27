@@ -19,8 +19,8 @@ public class VolleyApp extends Application {
         // 初始化leanCloud
         AVOSCloud.initialize(
                 this,
-                "9k1odzvo487o1o8w15llqix9i2jbg14kvmrn6wa9d9kxdbkd",
-                "fyi4230hg33idm1gp5qw7wspmk5re7rox6m7b7f61e289zyq");
+                "lgt86x4nela39ip0w9sual23hwubpgp1d5qhcl7k3jbkl9hv",
+                "ujnmqih2olni35gb7774ocd4jdosvbd0s725gdzjhoaqpx4z");
 
         // 测试leanCloud导入是否成功
         AVObject testObject = new AVObject("TestObject");
